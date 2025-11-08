@@ -7,8 +7,8 @@
 export async function getEstimate(answers) {
   try {
     // For development, use the local Wrangler dev server
-    // For production, replace with your deployed worker URL
-    const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'http://localhost:8787';
+    // For production, use the deployed worker URL
+    const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://evala-ai-worker.hillarymukuka.workers.dev';
 
     const response = await fetch(WORKER_URL, {
       method: 'POST',
