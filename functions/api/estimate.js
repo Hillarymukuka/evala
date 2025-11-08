@@ -3,15 +3,23 @@
  * Uses direct API access to Cloudflare AI with API token from environment
  */
 
-const systemPrompt = `You are Evala by Nestro, an expert cost estimator specializing in African markets, particularly Zambia.
+const systemPrompt = `
+You are Evala by Nestro, an expert in estimating jobs or works using the most current industry market for any type of industry, with a major focus on African industries and African market prices.
+You provide realistic cost breakdowns for clients based on their answers.
 
-CRITICAL: All calculations MUST be mathematically accurate. Total cost MUST equal sum of all breakdowns.
+CRITICAL REQUIREMENTS:
+1. **Mathematical Accuracy is MANDATORY**: All numbers MUST add up correctly. The total estimate MUST equal the sum of all category breakdowns.
+2. **Double-check all calculations**: Before providing the final response, verify that all subtotals and totals are mathematically correct.
+3. **Show your work**: Break down calculations clearly so the math can be verified.
+4. **Use realistic market rates**: Base estimates on current African market prices, especially for Zambian markets when applicable.
 
-FORMAT:
+FORMAT YOUR RESPONSE AS FOLLOWS:
+
 ## Executive Summary
-[Brief project overview]
+[Brief overview of the project and what the estimate covers]
 
-## Total Cost: ZMW [AMOUNT]
+## Total Estimated Cost
+**ZMW [TOTAL_AMOUNT]** (or appropriate currency)
 
 ## Breakdown:
 ### 1. Labour - ZMW [subtotal]
@@ -32,8 +40,8 @@ FORMAT:
 ## Verification
 Total = [show addition of all subtotals]
 
-## Recommendations
-[Professional advice and cost optimization tips]
+## Additional Notes & Recommendations
+[Professional advice, risk factors, ways to optimize costs, etc.]
 
 Ensure complete response with all sections filled.`;
 
@@ -75,44 +83,67 @@ Details: ${answers.details}
       );
     }
 
-    // Call Cloudflare AI API directly
+    // Call Cloudflare AI API directly with increased timeout
     const aiApiUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.1-70b-instruct`;
     
-    const aiResponse = await fetch(aiApiUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${CF_API_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.` }
-        ],
-        max_tokens: 8192, // Maximum token limit for complete responses
-        temperature: 0.7,
-        stream: false,
-        top_p: 0.9
-      }),
-    });
+    // Create an abort controller for timeout handling
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
+    
+    try {
+      const aiResponse = await fetch(aiApiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CF_API_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.` }
+          ],
+          max_tokens: 8192, // Maximum token limit for complete responses
+          temperature: 0.7,
+          stream: false,
+          top_p: 0.9
+        }),
+        signal: controller.signal
+      });
 
-    const aiResult = await aiResponse.json();
+      clearTimeout(timeoutId);
 
-    if (!aiResponse.ok) {
-      console.error('AI API Error:', aiResult);
+      const aiResult = await aiResponse.json();
+
+      if (!aiResponse.ok) {
+        console.error('AI API Error:', aiResult);
+        return new Response(
+          JSON.stringify({ error: 'Failed to generate estimate from AI' }), 
+          { status: 500, headers: corsHeaders }
+        );
+      }
+
+      // Extract the response text
+      const estimateText = aiResult.result?.response || aiResult.response || 'Unable to generate estimate';
+      
+      // Log for debugging
+      console.log('AI Response length:', estimateText.length);
+      console.log('Full AI Result:', JSON.stringify(aiResult).substring(0, 500));
+
       return new Response(
-        JSON.stringify({ error: 'Failed to generate estimate from AI' }), 
-        { status: 500, headers: corsHeaders }
+        JSON.stringify({ estimate: estimateText }), 
+        { headers: corsHeaders }
       );
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      
+      if (fetchError.name === 'AbortError') {
+        return new Response(
+          JSON.stringify({ error: 'Request timed out. The AI is taking longer than expected. Please try again.' }), 
+          { status: 504, headers: corsHeaders }
+        );
+      }
+      throw fetchError;
     }
-
-    // Extract the response text
-    const estimateText = aiResult.result?.response || 'Unable to generate estimate';
-
-    return new Response(
-      JSON.stringify({ estimate: estimateText }), 
-      { headers: corsHeaders }
-    );
 
   } catch (error) {
     console.error('Function error:', error);
