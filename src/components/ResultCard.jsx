@@ -29,36 +29,17 @@ export default function ResultCard({ answer, onBack }) {
       text = JSON.stringify(text, null, 2)
     }
 
-    // Split by common section markers
-    const sections = text.split(/\n(?=\*\*|##|[A-Z][A-Za-z\s]+:|\d+\.)/g)
-    
-    return sections.map((section, idx) => {
-      // Check if it's a heading
-      const isHeading = section.match(/^\*\*(.+?)\*\*|^##\s*(.+)|^([A-Z][A-Za-z\s]+):/)
-      
-      if (isHeading) {
-        const heading = isHeading[1] || isHeading[2] || isHeading[3]
-        const content = section.replace(/^\*\*(.+?)\*\*|^##\s*(.+)|^([A-Z][A-Za-z\s]+):/, '').trim()
-        
-        return (
-          <div key={idx} className="mb-6">
-            <h3 className="text-lg font-bold text-[#3B0270] mb-2 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#3B0270] to-[#FF4E00]" />
-              {heading}
-            </h3>
-            <div className="text-gray-700 leading-relaxed ml-4 whitespace-pre-wrap">
-              {content}
-            </div>
-          </div>
-        )
-      }
-      
-      return (
-        <div key={idx} className="mb-4 text-gray-700 leading-relaxed whitespace-pre-wrap">
-          {section.trim()}
-        </div>
-      )
-    })
+    console.log('=== FORMATTING ANSWER ===');
+    console.log('Input length:', text.length);
+    console.log('First 200 chars:', text.substring(0, 200));
+    console.log('Last 200 chars:', text.substring(Math.max(0, text.length - 200)));
+
+    // Simple approach: just preserve formatting and return as-is with markdown styling
+    return (
+      <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+        {text}
+      </div>
+    );
   }
 
   return (
