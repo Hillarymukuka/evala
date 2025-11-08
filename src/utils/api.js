@@ -6,9 +6,9 @@
 
 export async function getEstimate(answers) {
   try {
-    // For development, use the local Wrangler dev server
-    // For production, use the deployed worker URL
-    const WORKER_URL = import.meta.env.VITE_WORKER_URL || 'https://evala-ai-worker.hillarymukuka.workers.dev';
+    // Use Cloudflare Pages Function (runs on the same domain)
+    // This is much more reliable than calling an external worker
+    const WORKER_URL = '/api/estimate';
 
     const response = await fetch(WORKER_URL, {
       method: 'POST',
