@@ -25,6 +25,15 @@ export async function getEstimate(answers) {
 
     const data = await response.json();
     
+    // DEBUGGING: Log what we receive
+    console.log('=== FRONTEND RECEIVED ===');
+    console.log('Data keys:', Object.keys(data));
+    console.log('Estimate length:', data.estimate?.length);
+    console.log('Estimate first 500 chars:', data.estimate?.substring(0, 500));
+    console.log('Estimate last 500 chars:', data.estimate?.substring(Math.max(0, (data.estimate?.length || 0) - 500)));
+    console.log('Debug info:', data.debug);
+    console.log('=== END FRONTEND DEBUG ===');
+    
     if (!data.estimate) {
       throw new Error('No estimate returned from server');
     }

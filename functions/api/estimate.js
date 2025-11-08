@@ -122,15 +122,33 @@ Details: ${answers.details}
         );
       }
 
+      // DEBUGGING: Log the complete AI response structure
+      console.log('=== AI API RESPONSE DEBUG ===');
+      console.log('Full AI Result:', JSON.stringify(aiResult, null, 2));
+      console.log('Response path 1 (result.response):', aiResult.result?.response?.substring(0, 200));
+      console.log('Response path 2 (response):', aiResult.response?.substring(0, 200));
+      console.log('All keys in result:', Object.keys(aiResult));
+      if (aiResult.result) {
+        console.log('All keys in result.result:', Object.keys(aiResult.result));
+      }
+
       // Extract the response text
       const estimateText = aiResult.result?.response || aiResult.response || 'Unable to generate estimate';
       
-      // Log for debugging
-      console.log('AI Response length:', estimateText.length);
-      console.log('Full AI Result:', JSON.stringify(aiResult).substring(0, 500));
+      // Log final response details
+      console.log('Final estimate length:', estimateText.length);
+      console.log('Final estimate (first 500 chars):', estimateText.substring(0, 500));
+      console.log('Final estimate (last 500 chars):', estimateText.substring(Math.max(0, estimateText.length - 500)));
+      console.log('=== END DEBUG ===');
 
       return new Response(
-        JSON.stringify({ estimate: estimateText }), 
+        JSON.stringify({ 
+          estimate: estimateText,
+          debug: {
+            length: estimateText.length,
+            truncated: estimateText.length >= 8000 // Flag if it might be truncated
+          }
+        }), 
         { headers: corsHeaders }
       );
     } catch (fetchError) {
