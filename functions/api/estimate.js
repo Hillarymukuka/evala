@@ -61,6 +61,9 @@ Details: ${answers.details}
           { role: 'system', content: systemPrompt },
           { role: 'user', content: `${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.` }
         ],
+        max_tokens: 4096, // Increased token limit for complete responses
+        temperature: 0.7,
+        stream: false
       }),
     });
 
