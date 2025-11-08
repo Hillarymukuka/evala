@@ -1,0 +1,11 @@
+name = "evala-ai-worker"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# This enables Workers AI - no account_id needed when using Workers AI binding
+[ai]
+binding = "AI"
+
+[env.production]
+# production-specific overrides
+
