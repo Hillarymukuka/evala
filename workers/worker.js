@@ -49,13 +49,19 @@ Details: ${answers.details}
 
       const fullPrompt = `${systemPrompt}\n\n${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.`;
 
-      // Use Cloudflare Workers AI
-      const aiResponse = await env.AI.run('@cf/meta/llama-3-8b-instruct', {
-        prompt: fullPrompt,
+      // Use Cloudflare Workers AI - Llama 3.1 70B is excellent for complex instructions and detailed responses
+      const aiResponse = await env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.` }
+        ],
       });
 
+      // Extract the response text from the AI response
+      const estimateText = aiResponse.response || aiResponse.result?.response || 'Unable to generate estimate';
+
       return new Response(
-        JSON.stringify({ estimate: aiResponse.response }), 
+        JSON.stringify({ estimate: estimateText }), 
         { headers: corsHeaders }
       );
 
