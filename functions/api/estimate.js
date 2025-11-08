@@ -1,6 +1,6 @@
 /**
  * Cloudflare Pages Function for Evala
- * This runs directly on Cloudflare Pages and uses Workers AI
+ * Uses direct API access to Cloudflare AI with API token from environment
  */
 
 const systemPrompt = `
@@ -36,16 +36,46 @@ Duration: ${answers.duration}
 Details: ${answers.details}
     `;
 
-    // Use Cloudflare AI binding from Pages
-    const aiResponse = await context.env.AI.run('@cf/meta/llama-3.1-70b-instruct', {
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: `${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.` }
-      ],
+    // Get credentials from environment variables
+    const CF_API_TOKEN = context.env.CF_API_TOKEN;
+    const CF_ACCOUNT_ID = context.env.CF_ACCOUNT_ID;
+
+    if (!CF_API_TOKEN || !CF_ACCOUNT_ID) {
+      return new Response(
+        JSON.stringify({ error: 'Server configuration error: Missing API credentials' }), 
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
+    // Call Cloudflare AI API directly
+    const aiApiUrl = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/ai/run/@cf/meta/llama-3.1-70b-instruct`;
+    
+    const aiResponse = await fetch(aiApiUrl, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${CF_API_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: `${userInput}\n\nPlease provide a detailed, professional cost estimate with clear sections and pricing in local currency.` }
+        ],
+      }),
     });
 
+    const aiResult = await aiResponse.json();
+
+    if (!aiResponse.ok) {
+      console.error('AI API Error:', aiResult);
+      return new Response(
+        JSON.stringify({ error: 'Failed to generate estimate from AI' }), 
+        { status: 500, headers: corsHeaders }
+      );
+    }
+
     // Extract the response text
-    const estimateText = aiResponse.response || aiResponse.result?.response || 'Unable to generate estimate';
+    const estimateText = aiResult.result?.response || 'Unable to generate estimate';
 
     return new Response(
       JSON.stringify({ estimate: estimateText }), 
