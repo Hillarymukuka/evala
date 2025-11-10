@@ -164,6 +164,23 @@ export default function ResultCard({ answer, onBack }) {
           </p>
         </div>
       </motion.div>
+
+      {/* AI Disclaimer */}
+      <motion.div
+        className="mt-6 p-4 bg-amber-50 rounded-xl border border-amber-200"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.9 }}
+      >
+        <div className="flex items-start gap-3">
+          <Info className="w-5 h-5 text-amber-700 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-amber-900">
+            <strong>Disclaimer:</strong> Nestro AI can sometimes provide inaccurate information. 
+            This estimate is generated using artificial intelligence and should be used as a guideline only. 
+            Always verify costs with qualified professionals and service providers before making decisions.
+          </p>
+        </div>
+      </motion.div>
     </motion.div>
   )
 }
