@@ -10,7 +10,9 @@ import {
   ListChecks,
   ChevronRight,
   ChevronLeft,
-  Lightbulb
+  Lightbulb,
+  Building,
+  Store
 } from 'lucide-react'
 
 export default function QuestionFlow({ onFinish }) {
@@ -18,6 +20,7 @@ export default function QuestionFlow({ onFinish }) {
   const [form, setForm] = useState({
     type: '',
     industry: '',
+    businessType: '',
     country: 'Zambia',
     scope: '',
     duration: '',
@@ -38,6 +41,18 @@ export default function QuestionFlow({ onFinish }) {
       placeholder: 'Creative, Construction, Technology...',
       icon: Building2,
       hint: 'This helps us apply the right pricing model'
+    },
+    { 
+      key: 'businessType', 
+      label: 'What type of business is this for?', 
+      placeholder: 'Select business type',
+      icon: Building,
+      hint: 'Pricing scales based on business size and budget',
+      isSelect: true,
+      options: [
+        { value: 'sme', label: 'SME / Small Business', description: 'Small to medium enterprises, startups, freelancers' },
+        { value: 'corporate', label: 'Corporate / Large Company', description: 'Established corporations, large organizations' }
+      ]
     },
     { 
       key: 'country', 
@@ -123,7 +138,40 @@ export default function QuestionFlow({ onFinish }) {
 
         {/* Input Field */}
         <div className="mb-8">
-          {currentStep.key === 'country' ? (
+          {currentStep.isSelect ? (
+            <div className="space-y-3">
+              {currentStep.options.map((option) => (
+                <motion.button
+                  key={option.value}
+                  type="button"
+                  onClick={() => update(currentStep.key, option.value)}
+                  className={`w-full p-4 rounded-xl border-2 text-left transition-all ${
+                    form[currentStep.key] === option.value
+                      ? 'border-[#3B0270] bg-purple-50'
+                      : 'border-gray-200 hover:border-[#3B0270] hover:bg-gray-50'
+                  }`}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className={`mt-1 w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                      form[currentStep.key] === option.value
+                        ? 'border-[#3B0270] bg-[#3B0270]'
+                        : 'border-gray-300'
+                    }`}>
+                      {form[currentStep.key] === option.value && (
+                        <div className="w-2 h-2 bg-white rounded-full" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-semibold text-gray-900">{option.label}</div>
+                      <div className="text-sm text-gray-600 mt-1">{option.description}</div>
+                    </div>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          ) : currentStep.key === 'country' ? (
             <select
               value={form.country}
               onChange={e => update('country', e.target.value)}
