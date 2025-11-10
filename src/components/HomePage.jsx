@@ -15,6 +15,16 @@ import {
 } from 'lucide-react'
 
 export default function HomePage({ onNavigateToEstimator }) {
+  // Scroll handler to smoothly slide to the How It Works section
+  const scrollToHow = () => {
+    try {
+      const el = document.getElementById('how-it-works')
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    } catch (err) {
+      // fallback: jump to anchor
+      window.location.hash = '#how-it-works'
+    }
+  }
   const features = [
     {
       icon: Globe,
@@ -126,7 +136,7 @@ export default function HomePage({ onNavigateToEstimator }) {
                 Start Estimating
                 <ArrowRight className="w-5 h-5" />
               </button>
-              <button className="btn-secondary flex items-center gap-2 text-lg px-8 py-4">
+              <button onClick={scrollToHow} className="btn-secondary flex items-center gap-2 text-lg px-8 py-4">
                 <Target className="w-5 h-5" />
                 Learn More
               </button>
@@ -190,7 +200,7 @@ export default function HomePage({ onNavigateToEstimator }) {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white/50">
+      <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8 bg-white/50">
         <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
